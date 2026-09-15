@@ -14,7 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checklists_esperados: {
+        Row: {
+          chave: string
+          checklist_id: string | null
+          cliente: string | null
+          conferente: string | null
+          created_at: string
+          data_nf: string | null
+          finalizado_em: string | null
+          nfs: Json
+          primeira_deteccao: string
+          qtd_nf: number
+          resolvido_em: string | null
+          status: string
+          tipo: string
+          transportadora: string | null
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          chave: string
+          checklist_id?: string | null
+          cliente?: string | null
+          conferente?: string | null
+          created_at?: string
+          data_nf?: string | null
+          finalizado_em?: string | null
+          nfs?: Json
+          primeira_deteccao?: string
+          qtd_nf?: number
+          resolvido_em?: string | null
+          status?: string
+          tipo: string
+          transportadora?: string | null
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          chave?: string
+          checklist_id?: string | null
+          cliente?: string | null
+          conferente?: string | null
+          created_at?: string
+          data_nf?: string | null
+          finalizado_em?: string | null
+          nfs?: Json
+          primeira_deteccao?: string
+          qtd_nf?: number
+          resolvido_em?: string | null
+          status?: string
+          tipo?: string
+          transportadora?: string | null
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      checklists_realizados: {
+        Row: {
+          chave: string | null
+          checklist_id: string
+          conferente: string | null
+          created_at: string
+          criado_em: string | null
+          finalizado_em: string | null
+          localidade: string | null
+          objeto_raw: string | null
+          roteiro: string | null
+          status: string | null
+          unidade: string | null
+        }
+        Insert: {
+          chave?: string | null
+          checklist_id: string
+          conferente?: string | null
+          created_at?: string
+          criado_em?: string | null
+          finalizado_em?: string | null
+          localidade?: string | null
+          objeto_raw?: string | null
+          roteiro?: string | null
+          status?: string | null
+          unidade?: string | null
+        }
+        Update: {
+          chave?: string | null
+          checklist_id?: string
+          conferente?: string | null
+          created_at?: string
+          criado_em?: string | null
+          finalizado_em?: string | null
+          localidade?: string | null
+          objeto_raw?: string | null
+          roteiro?: string | null
+          status?: string | null
+          unidade?: string | null
+        }
+        Relationships: []
+      }
+      resumo_diario: {
+        Row: {
+          data_ref: string
+          esperados: number
+          novas_pendencias: number
+          pendencias_antigas: number
+          pendencias_resolvidas: number
+          processado_em: string
+          produtividade: Json
+          realizados: number
+          saldo_acumulado: number
+        }
+        Insert: {
+          data_ref: string
+          esperados?: number
+          novas_pendencias?: number
+          pendencias_antigas?: number
+          pendencias_resolvidas?: number
+          processado_em?: string
+          produtividade?: Json
+          realizados?: number
+          saldo_acumulado?: number
+        }
+        Update: {
+          data_ref?: string
+          esperados?: number
+          novas_pendencias?: number
+          pendencias_antigas?: number
+          pendencias_resolvidas?: number
+          processado_em?: string
+          produtividade?: Json
+          realizados?: number
+          saldo_acumulado?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
