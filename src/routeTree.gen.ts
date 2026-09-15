@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtualizarRouteImport } from './routes/atualizar'
+import { Route as PendenciasRouteImport } from './routes/pendencias'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const AtualizarRoute = AtualizarRouteImport.update({
   path: '/atualizar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PendenciasRoute = PendenciasRouteImport.update({
+  id: '/pendencias',
+  path: '/pendencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/pendencias': typeof PendenciasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/pendencias': typeof PendenciasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/pendencias': typeof PendenciasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/atualizar'
+  fullPaths: '/' | '/atualizar' | '/pendencias'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/atualizar'
-  id: '__root__' | '/' | '/atualizar'
+  to: '/' | '/atualizar' | '/pendencias'
+  id: '__root__' | '/' | '/atualizar' | '/pendencias'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtualizarRoute: typeof AtualizarRoute
+  PendenciasRoute: typeof PendenciasRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtualizarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pendencias': {
+      id: '/pendencias'
+      path: '/pendencias'
+      fullPath: '/pendencias'
+      preLoaderRoute: typeof PendenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtualizarRoute: AtualizarRoute,
+  PendenciasRoute: PendenciasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
