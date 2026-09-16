@@ -101,11 +101,11 @@ function Horarios() {
               <div className="mt-4 h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={calc.horas}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="hora" fontSize={10} interval={1} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis fontSize={11} allowDecimals={false} stroke="hsl(var(--muted-foreground))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="hora" fontSize={10} interval={1} stroke="var(--muted-foreground)" />
+                    <YAxis fontSize={11} allowDecimals={false} stroke="var(--muted-foreground)" />
                     <Tooltip />
-                    <Bar dataKey="qtd" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="qtd" fill="var(--primary)" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -116,11 +116,11 @@ function Horarios() {
               <div className="mt-4 h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={calc.semana}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="dia" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis fontSize={11} allowDecimals={false} stroke="hsl(var(--muted-foreground))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="dia" fontSize={11} stroke="var(--muted-foreground)" />
+                    <YAxis fontSize={11} allowDecimals={false} stroke="var(--muted-foreground)" />
                     <Tooltip />
-                    <Bar dataKey="qtd" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="qtd" fill="var(--success)" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -147,7 +147,7 @@ function Horarios() {
                       className="h-6 w-6 rounded-sm border border-border/40"
                       style={{
                         backgroundColor: q
-                          ? `color-mix(in srgb, hsl(var(--primary)) ${Math.round((q / calc.max) * 100)}%, transparent)`
+                          ? `color-mix(in srgb, var(--primary) ${Math.round((q / calc.max) * 100)}%, transparent)`
                           : "transparent",
                       }}
                     />

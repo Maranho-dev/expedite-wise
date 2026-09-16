@@ -120,14 +120,14 @@ function Historico() {
             <div className="mt-4 h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={serie}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="dia" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis fontSize={11} allowDecimals={false} stroke="hsl(var(--muted-foreground))" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="dia" fontSize={11} stroke="var(--muted-foreground)" />
+                  <YAxis fontSize={11} allowDecimals={false} stroke="var(--muted-foreground)" />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="Esperados" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="Realizados" stroke="hsl(var(--success))" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="Saldo" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Esperados" stroke="var(--primary)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Realizados" stroke="var(--success)" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Saldo" stroke="var(--destructive)" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
