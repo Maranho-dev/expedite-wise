@@ -45,7 +45,7 @@ function lerArquivo(file: File): Promise<Row[]> {
     reader.onload = () => {
       try {
         const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
-        const ws = wb.Sheets[wb.SheetNames[0]];
+        const ws = wb.Sheets[wb.SheetNames[0]!]!;
         resolve(XLSX.utils.sheet_to_json<Row>(ws, { defval: null }));
       } catch (e) {
         reject(e as Error);
@@ -58,8 +58,8 @@ function lerArquivo(file: File): Promise<Row[]> {
 function lerColado(texto: string): Row[] {
   const linhas = texto.trim().split(/\r?\n/).filter(Boolean);
   if (linhas.length < 2) return [];
-  const sep = linhas[0].includes("\t") ? "\t" : linhas[0].includes(";") ? ";" : ",";
-  const heads = linhas[0].split(sep).map((h) => h.trim());
+  const sep = linhas[0]!.includes("\t") ? "\t" : linhas[0]!.includes(";") ? ";" : ",";
+  const heads = linhas[0]!.split(sep).map((h) => h.trim());
   return linhas.slice(1).map((l) => {
     const cols = l.split(sep);
     const obj: Row = {};
@@ -128,7 +128,7 @@ function BaseInput({
         </div>
         {rows.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
-            {Object.keys(rows[0]).map((c) => (
+            {Object.keys(rows[0]!).map((c) => (
               <span key={c} className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                 {c}
               </span>
@@ -147,8 +147,8 @@ function Atualizar() {
   const [processando, setProcessando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoProcessamento | null>(null);
 
-  const mapaNF = nfRows.length ? detectarNF(Object.keys(nfRows[0])) : null;
-  const mapaCK = ckRows.length ? detectarCK(Object.keys(ckRows[0])) : null;
+  const mapaNF = nfRows.length ? detectarNF(Object.keys(nfRows[0]!)) : null;
+  const mapaCK = ckRows.length ? detectarCK(Object.keys(ckRows[0]!)) : null;
 
   async function processar() {
     if (!nfRows.length || !ckRows.length) {

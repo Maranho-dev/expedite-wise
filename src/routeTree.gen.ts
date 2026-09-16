@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtualizarRouteImport } from './routes/atualizar'
+import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as HorariosRouteImport } from './routes/horarios'
 import { Route as PendenciasRouteImport } from './routes/pendencias'
+import { Route as ProdutividadeRouteImport } from './routes/produtividade'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,40 +26,86 @@ const AtualizarRoute = AtualizarRouteImport.update({
   path: '/atualizar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HorariosRoute = HorariosRouteImport.update({
+  id: '/horarios',
+  path: '/horarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PendenciasRoute = PendenciasRouteImport.update({
   id: '/pendencias',
   path: '/pendencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdutividadeRoute = ProdutividadeRouteImport.update({
+  id: '/produtividade',
+  path: '/produtividade',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/historico': typeof HistoricoRoute
+  '/horarios': typeof HorariosRoute
   '/pendencias': typeof PendenciasRoute
+  '/produtividade': typeof ProdutividadeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/historico': typeof HistoricoRoute
+  '/horarios': typeof HorariosRoute
   '/pendencias': typeof PendenciasRoute
+  '/produtividade': typeof ProdutividadeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/historico': typeof HistoricoRoute
+  '/horarios': typeof HorariosRoute
   '/pendencias': typeof PendenciasRoute
+  '/produtividade': typeof ProdutividadeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/atualizar' | '/pendencias'
+  fullPaths:
+    | '/'
+    | '/atualizar'
+    | '/historico'
+    | '/horarios'
+    | '/pendencias'
+    | '/produtividade'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/atualizar' | '/pendencias'
-  id: '__root__' | '/' | '/atualizar' | '/pendencias'
+  to:
+    | '/'
+    | '/atualizar'
+    | '/historico'
+    | '/horarios'
+    | '/pendencias'
+    | '/produtividade'
+  id:
+    | '__root__'
+    | '/'
+    | '/atualizar'
+    | '/historico'
+    | '/horarios'
+    | '/pendencias'
+    | '/produtividade'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtualizarRoute: typeof AtualizarRoute
+  HistoricoRoute: typeof HistoricoRoute
+  HorariosRoute: typeof HorariosRoute
   PendenciasRoute: typeof PendenciasRoute
+  ProdutividadeRoute: typeof ProdutividadeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +124,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtualizarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/horarios': {
+      id: '/horarios'
+      path: '/horarios'
+      fullPath: '/horarios'
+      preLoaderRoute: typeof HorariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pendencias': {
       id: '/pendencias'
       path: '/pendencias'
       fullPath: '/pendencias'
       preLoaderRoute: typeof PendenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produtividade': {
+      id: '/produtividade'
+      path: '/produtividade'
+      fullPath: '/produtividade'
+      preLoaderRoute: typeof ProdutividadeRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +158,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtualizarRoute: AtualizarRoute,
+  HistoricoRoute: HistoricoRoute,
+  HorariosRoute: HorariosRoute,
   PendenciasRoute: PendenciasRoute,
+  ProdutividadeRoute: ProdutividadeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
