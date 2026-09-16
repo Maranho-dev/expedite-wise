@@ -65,17 +65,18 @@ function Horarios() {
       if (isNaN(d.getTime())) continue;
       const h = d.getHours();
       const dw = d.getDay();
-      horas[h].qtd += 1;
-      semana[dw].qtd += 1;
-      heat[dw][h] += 1;
+      horas[h]!.qtd += 1;
+      semana[dw]!.qtd += 1;
+      heat[dw]![h] = (heat[dw]![h] ?? 0) + 1;
       turnos.set(turnoDe(h), (turnos.get(turnoDe(h)) ?? 0) + 1);
       total += 1;
     }
 
-    const pico = horas.reduce((a, b) => (b.qtd > a.qtd ? b : a), horas[0]);
+    const pico = horas.reduce((a, b) => (b.qtd > a.qtd ? b : a), horas[0]!);
     const max = Math.max(1, ...heat.flat());
     const listaTurnos = [...turnos.entries()].sort((a, b) => b[1] - a[1]);
     return { horas, semana, heat, total, pico, max, listaTurnos };
+
   }, [data]);
 
   return (
