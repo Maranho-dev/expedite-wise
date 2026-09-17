@@ -180,7 +180,7 @@ function Atualizar() {
   return (
     <AppShell
       titulo="Atualizar bases"
-      descricao="Envie as duas bases do dia. O sistema identifica as colunas, monta a chave de cada checklist, cruza as informações e registra o resultado no histórico."
+      descricao="Envie as bases do dia. O sistema identifica as colunas, monta a chave de cada checklist, cruza as informações, confere os comprovantes de entrega e registra o resultado no histórico."
     >
       <div className="grid gap-5 lg:grid-cols-2">
         <BaseInput
@@ -195,12 +195,19 @@ function Atualizar() {
           rows={ckRows}
           onRows={setCkRows}
         />
+        <BaseInput
+          titulo="Base 3 — Comprovantes de entrega"
+          descricao="Notas com comprovante baixado pelo motorista (documento e finalização)."
+          rows={cpRows}
+          onRows={setCpRows}
+        />
       </div>
 
-      {(mapaNF || mapaCK) && (
+      {(mapaNF || mapaCK || mapaCP) && (
         <div className="mt-5 grid gap-5 lg:grid-cols-2">
           {mapaNF && <MapaCard titulo="Colunas identificadas — Notas Fiscais" mapa={mapaNF} />}
           {mapaCK && <MapaCard titulo="Colunas identificadas — Checklists" mapa={mapaCK} />}
+          {mapaCP && <MapaCard titulo="Colunas identificadas — Comprovantes" mapa={mapaCP} />}
         </div>
       )}
 
@@ -234,6 +241,9 @@ function Atualizar() {
               ["Pendências antigas", resultado.pendencias_antigas],
               ["Resolvidas", resultado.pendencias_resolvidas],
               ["Saldo acumulado", resultado.saldo_acumulado],
+              ["NFs com carga", resultado.canhotos_esperados],
+              ["Canhotos OK", resultado.canhotos_ok],
+              ["Canhotos pendentes", resultado.canhotos_pendentes],
             ].map(([k, v]) => (
               <div key={k as string} className="rounded-md bg-muted/60 p-3">
                 <p className="text-xs text-muted-foreground">{k}</p>
