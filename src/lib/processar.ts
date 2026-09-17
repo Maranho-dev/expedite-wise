@@ -131,6 +131,8 @@ export async function processarBases(
   dataRef: string,
   esperados: Esperado[],
   realizados: Realizado[],
+  notasComCarga: NotaComCarga[] = [],
+  baixas: BaixaComprovante[] = [],
 ): Promise<ResultadoProcessamento> {
   const validos = realizados.filter(finalizado);
 
@@ -267,7 +269,12 @@ export async function processarBases(
     .map(([conferente, qtd]) => ({ conferente, qtd }))
     .sort((a, b) => b.qtd - a.qtd);
 
+  const canhotos = await processarComprovantes(dataRef, notasComCarga, baixas);
+
   const resumo: ResultadoProcessamento = {
+    canhotos_esperados: canhotos.esperados,
+    canhotos_ok: canhotos.ok,
+    canhotos_pendentes: canhotos.pendentes,
     data_ref: dataRef,
     esperados: esperadosDoDia,
     realizados: realizadosDoDia,
