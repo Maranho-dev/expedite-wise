@@ -2,7 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   finalizado,
   isoDia,
+  type BaixaComprovante,
   type Esperado,
+  type NotaComCarga,
   type Realizado,
 } from "@/lib/checklist-core";
 
