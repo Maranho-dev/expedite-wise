@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AtualizarRouteImport } from './routes/atualizar'
+import { Route as CanhotosRouteImport } from './routes/canhotos'
 import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as HorariosRouteImport } from './routes/horarios'
 import { Route as PendenciasRouteImport } from './routes/pendencias'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AtualizarRoute = AtualizarRouteImport.update({
   id: '/atualizar',
   path: '/atualizar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CanhotosRoute = CanhotosRouteImport.update({
+  id: '/canhotos',
+  path: '/canhotos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoricoRoute = HistoricoRouteImport.update({
@@ -50,6 +56,7 @@ const ProdutividadeRoute = ProdutividadeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/canhotos': typeof CanhotosRoute
   '/historico': typeof HistoricoRoute
   '/horarios': typeof HorariosRoute
   '/pendencias': typeof PendenciasRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/canhotos': typeof CanhotosRoute
   '/historico': typeof HistoricoRoute
   '/horarios': typeof HorariosRoute
   '/pendencias': typeof PendenciasRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/atualizar': typeof AtualizarRoute
+  '/canhotos': typeof CanhotosRoute
   '/historico': typeof HistoricoRoute
   '/horarios': typeof HorariosRoute
   '/pendencias': typeof PendenciasRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/atualizar'
+    | '/canhotos'
     | '/historico'
     | '/horarios'
     | '/pendencias'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/atualizar'
+    | '/canhotos'
     | '/historico'
     | '/horarios'
     | '/pendencias'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/atualizar'
+    | '/canhotos'
     | '/historico'
     | '/horarios'
     | '/pendencias'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AtualizarRoute: typeof AtualizarRoute
+  CanhotosRoute: typeof CanhotosRoute
   HistoricoRoute: typeof HistoricoRoute
   HorariosRoute: typeof HorariosRoute
   PendenciasRoute: typeof PendenciasRoute
@@ -122,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/atualizar'
       fullPath: '/atualizar'
       preLoaderRoute: typeof AtualizarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/canhotos': {
+      id: '/canhotos'
+      path: '/canhotos'
+      fullPath: '/canhotos'
+      preLoaderRoute: typeof CanhotosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/historico': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AtualizarRoute: AtualizarRoute,
+  CanhotosRoute: CanhotosRoute,
   HistoricoRoute: HistoricoRoute,
   HorariosRoute: HorariosRoute,
   PendenciasRoute: PendenciasRoute,

@@ -2,7 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   finalizado,
   isoDia,
+  type BaixaComprovante,
   type Esperado,
+  type NotaComCarga,
   type Realizado,
 } from "@/lib/checklist-core";
 
@@ -17,7 +19,90 @@ export type ResultadoProcessamento = {
   pendencias_resolvidas: number;
   saldo_acumulado: number;
   produtividade: { conferente: string; qtd: number }[];
+  canhotos_esperados: number;
+  canhotos_ok: number;
+  canhotos_pendentes: number;
 };
+
+/** Cruza as NFs com carga contra a base de comprovantes de entrega. */
+export async function processarComprovantes(
+  dataRef: string,
+  notas: NotaComCarga[],
+  baixas: BaixaComprovante[],
+): Promise<{ esperados: number; ok: number; pendentes: number }> {
+  const { data: existentes, error: errEx } = await supabase
+    .from("comprovantes_nf")
+    .select("nf, status")
+    .limit(100000);
+  if (errEx) throw errEx;
+  const jaExiste = new Set((existentes ?? []).map((e) => e.nf));
+
+  const novos = notas
+    .filter((n) => !jaExiste.has(n.nf))
+    .map((n) => ({
+      nf: n.nf,
+      carga: n.carga,
+      cliente: n.cliente,
+      transportadora: n.transportadora,
+      uf: n.uf,
+      data_nf: n.data_nf,
+      unidade: null as string | null,
+      cliente_destino: null as string | null,
+      finalizacao: null as string | null,
+      status: "PENDENTE",
+      primeira_deteccao: dataRef,
+      resolvido_em: null as string | null,
+    }));
+
+  if (novos.length) {
+    await emLotes(novos, 500, async (lote) => {
+      const { error } = await supabase.from("comprovantes_nf").upsert(lote, { onConflict: "nf" });
+      if (error) throw error;
+    });
+  }
+
+  const mapaBaixa = new Map(baixas.map((b) => [b.nf, b]));
+
+  const { data: todos, error: errTodos } = await supabase
+    .from("comprovantes_nf")
+    .select("nf, status")
+    .limit(100000);
+  if (errTodos) throw errTodos;
+
+  const atualizar = (todos ?? [])
+    .filter((c) => c.status === "PENDENTE" && mapaBaixa.has(c.nf))
+    .map((c) => mapaBaixa.get(c.nf)!);
+
+  await emLotes(atualizar, 200, async (lote) => {
+    for (const b of lote) {
+      const { error } = await supabase
+        .from("comprovantes_nf")
+        .update({
+          status: "OK",
+          finalizacao: b.finalizacao,
+          unidade: b.unidade,
+          cliente_destino: b.cliente_destino,
+          resolvido_em: dataRef,
+        })
+        .eq("nf", b.nf);
+      if (error) throw error;
+    }
+  });
+
+  const { count: pendentes } = await supabase
+    .from("comprovantes_nf")
+    .select("nf", { count: "exact", head: true })
+    .eq("status", "PENDENTE");
+  const { count: total } = await supabase
+    .from("comprovantes_nf")
+    .select("nf", { count: "exact", head: true });
+
+  return {
+    esperados: total ?? 0,
+    ok: (total ?? 0) - (pendentes ?? 0),
+    pendentes: pendentes ?? 0,
+  };
+}
 
 type LinhaEsperado = {
   chave: string;
@@ -46,6 +131,8 @@ export async function processarBases(
   dataRef: string,
   esperados: Esperado[],
   realizados: Realizado[],
+  notasComCarga: NotaComCarga[] = [],
+  baixas: BaixaComprovante[] = [],
 ): Promise<ResultadoProcessamento> {
   const validos = realizados.filter(finalizado);
 
@@ -182,7 +269,12 @@ export async function processarBases(
     .map(([conferente, qtd]) => ({ conferente, qtd }))
     .sort((a, b) => b.qtd - a.qtd);
 
+  const canhotos = await processarComprovantes(dataRef, notasComCarga, baixas);
+
   const resumo: ResultadoProcessamento = {
+    canhotos_esperados: canhotos.esperados,
+    canhotos_ok: canhotos.ok,
+    canhotos_pendentes: canhotos.pendentes,
     data_ref: dataRef,
     esperados: esperadosDoDia,
     realizados: realizadosDoDia,

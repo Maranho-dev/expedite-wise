@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 const nav = [
   { to: "/", label: "Painel" },
   { to: "/pendencias", label: "Pendências" },
+  { to: "/canhotos", label: "Canhotos" },
   { to: "/produtividade", label: "Produtividade" },
   { to: "/horarios", label: "Horários" },
   { to: "/historico", label: "Histórico" },

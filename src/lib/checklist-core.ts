@@ -203,3 +203,80 @@ export function montarRealizados(rows: Row[], mapa: MapaCK): Realizado[] {
 
 export const finalizado = (r: Realizado) =>
   !!r.finalizado_em && /finaliz|conclu/i.test(r.status ?? "Execução finalizada");
+
+/* ---------------- Comprovantes de entrega (canhotos) ---------------- */
+
+export type MapaCP = {
+  documento: string | null;
+  finalizacao: string | null;
+  unidade: string | null;
+  cliente: string | null;
+};
+
+export function detectarCP(headers: string[]): MapaCP {
+  return {
+    documento: pick(headers, [/documento/, /docto/, /\bnf\b/, /nota/, /^num/]),
+    finalizacao: pick(headers, [/finaliz/, /baixa/, /entrega/, /conclu/, /data/]),
+    unidade: pick(headers, [/unidade/, /filial/]),
+    cliente: pick(headers, [/cliente/, /destino/, /destinat/]),
+  };
+}
+
+export type NotaComCarga = {
+  nf: string;
+  carga: string;
+  cliente: string | null;
+  transportadora: string | null;
+  uf: string | null;
+  data_nf: string | null;
+};
+
+/** Todas as NFs que saíram com carga — cada uma exige um comprovante de entrega. */
+export function montarNotasComCarga(rows: Row[], mapa: MapaNF): NotaComCarga[] {
+  const out = new Map<string, NotaComCarga>();
+  for (const r of rows) {
+    const nf = mapa.nf ? chaveNumero(r[mapa.nf]) : null;
+    const carga = mapa.carga ? chaveNumero(r[mapa.carga]) : null;
+    if (!nf || !carga) continue;
+    const dt = mapa.data ? paraData(r[mapa.data]) : null;
+    out.set(nf, {
+      nf,
+      carga,
+      cliente: mapa.cliente ? (r[mapa.cliente] ?? null)?.toString() ?? null : null,
+      transportadora: mapa.transportadora
+        ? (r[mapa.transportadora] ?? null)?.toString() ?? null
+        : null,
+      uf: mapa.uf ? (r[mapa.uf] ?? null)?.toString() ?? null : null,
+      data_nf: dt ? isoDia(dt) : null,
+    });
+  }
+  return [...out.values()];
+}
+
+export type BaixaComprovante = {
+  nf: string;
+  finalizacao: string | null;
+  unidade: string | null;
+  cliente_destino: string | null;
+};
+
+/** Linhas da base de comprovantes: constar com finalização = canhoto entregue. */
+export function montarBaixas(rows: Row[], mapa: MapaCP): BaixaComprovante[] {
+  const out = new Map<string, BaixaComprovante>();
+  for (const r of rows) {
+    const nf = mapa.documento ? chaveNumero(r[mapa.documento]) : null;
+    if (!nf) continue;
+    const fim = mapa.finalizacao ? paraData(r[mapa.finalizacao]) : null;
+    if (!fim) continue;
+    const atual = out.get(nf);
+    const iso = fim.toISOString();
+    if (atual && (atual.finalizacao ?? "") <= iso) continue;
+    out.set(nf, {
+      nf,
+      finalizacao: iso,
+      unidade: mapa.unidade ? String(r[mapa.unidade] ?? "") || null : null,
+      cliente_destino: mapa.cliente ? String(r[mapa.cliente] ?? "") || null : null,
+    });
+  }
+  return [...out.values()];
+}
