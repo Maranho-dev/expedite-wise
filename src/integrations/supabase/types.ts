@@ -113,8 +113,62 @@ export type Database = {
         }
         Relationships: []
       }
+      comprovantes_nf: {
+        Row: {
+          carga: string | null
+          cliente: string | null
+          cliente_destino: string | null
+          created_at: string
+          data_nf: string | null
+          finalizacao: string | null
+          nf: string
+          primeira_deteccao: string
+          resolvido_em: string | null
+          status: string
+          transportadora: string | null
+          uf: string | null
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          carga?: string | null
+          cliente?: string | null
+          cliente_destino?: string | null
+          created_at?: string
+          data_nf?: string | null
+          finalizacao?: string | null
+          nf: string
+          primeira_deteccao?: string
+          resolvido_em?: string | null
+          status?: string
+          transportadora?: string | null
+          uf?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carga?: string | null
+          cliente?: string | null
+          cliente_destino?: string | null
+          created_at?: string
+          data_nf?: string | null
+          finalizacao?: string | null
+          nf?: string
+          primeira_deteccao?: string
+          resolvido_em?: string | null
+          status?: string
+          transportadora?: string | null
+          uf?: string | null
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       resumo_diario: {
         Row: {
+          canhotos_esperados: number
+          canhotos_ok: number
+          canhotos_pendentes: number
           data_ref: string
           esperados: number
           novas_pendencias: number
@@ -126,6 +180,9 @@ export type Database = {
           saldo_acumulado: number
         }
         Insert: {
+          canhotos_esperados?: number
+          canhotos_ok?: number
+          canhotos_pendentes?: number
           data_ref: string
           esperados?: number
           novas_pendencias?: number
@@ -137,6 +194,9 @@ export type Database = {
           saldo_acumulado?: number
         }
         Update: {
+          canhotos_esperados?: number
+          canhotos_ok?: number
+          canhotos_pendentes?: number
           data_ref?: string
           esperados?: number
           novas_pendencias?: number
