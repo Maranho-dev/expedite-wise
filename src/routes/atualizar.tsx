@@ -146,12 +146,14 @@ function BaseInput({
 function Atualizar() {
   const [nfRows, setNfRows] = useState<Row[]>([]);
   const [ckRows, setCkRows] = useState<Row[]>([]);
+  const [cpRows, setCpRows] = useState<Row[]>([]);
   const [dataRef, setDataRef] = useState(isoDia(new Date()));
   const [processando, setProcessando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoProcessamento | null>(null);
 
   const mapaNF = nfRows.length ? detectarNF(Object.keys(nfRows[0]!)) : null;
   const mapaCK = ckRows.length ? detectarCK(Object.keys(ckRows[0]!)) : null;
+  const mapaCP = cpRows.length ? detectarCP(Object.keys(cpRows[0]!)) : null;
 
   async function processar() {
     if (!nfRows.length || !ckRows.length) {
@@ -162,7 +164,9 @@ function Atualizar() {
     try {
       const esperados = montarEsperados(nfRows, mapaNF!);
       const realizados = montarRealizados(ckRows, mapaCK!);
-      const res = await processarBases(dataRef, esperados, realizados);
+      const notas = montarNotasComCarga(nfRows, mapaNF!);
+      const baixas = mapaCP ? montarBaixas(cpRows, mapaCP) : [];
+      const res = await processarBases(dataRef, esperados, realizados, notas, baixas);
       setResultado(res);
       toast.success("Bases processadas com sucesso");
     } catch (e) {
