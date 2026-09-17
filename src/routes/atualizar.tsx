@@ -10,9 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   detectarCK,
+  detectarCP,
   detectarNF,
   isoDia,
+  montarBaixas,
   montarEsperados,
+  montarNotasComCarga,
   montarRealizados,
   type Row,
 } from "@/lib/checklist-core";
