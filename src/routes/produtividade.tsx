@@ -94,9 +94,31 @@ function Produtividade() {
   });
 
   const calc = useMemo(() => {
-    const regs = (data ?? []).filter(
+    const base = (data ?? []).filter(
       (r) => r.conferente && /finaliz|conclu/i.test(r.status ?? "Execução finalizada"),
     );
+
+    const comData = base
+      .map((r) => {
+        const fim = new Date(r.finalizado_em!);
+        if (isNaN(fim.getTime())) return null;
+        return { ...r, fim, per: modo === "mes" ? chaveMes(fim) : chaveSemana(fim) };
+      })
+      .filter(Boolean) as (Reg & { fim: Date; per: string })[];
+
+    const periodos = [...new Set(comData.map((r) => r.per))].sort((a, b) => b.localeCompare(a));
+
+    const porPeriodo = new Map<string, number>();
+    for (const r of comData) porPeriodo.set(r.per, (porPeriodo.get(r.per) ?? 0) + 1);
+    const seriePeriodo = [...porPeriodo.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-18)
+      .map(([k, qtd]) => ({
+        rotulo: modo === "mes" ? rotuloMes(k) : rotuloSemana(k),
+        qtd,
+      }));
+
+    const regs = periodo === "todos" ? comData : comData.filter((r) => r.per === periodo);
     const total = regs.length;
     const porConf = new Map<
       string,
@@ -105,8 +127,7 @@ function Produtividade() {
     const porDia = new Map<string, number>();
 
     for (const r of regs) {
-      const fim = new Date(r.finalizado_em!);
-      if (isNaN(fim.getTime())) continue;
+      const fim = r.fim;
       const dia = isoDia(fim);
       porDia.set(dia, (porDia.get(dia) ?? 0) + 1);
 
@@ -147,8 +168,8 @@ function Produtividade() {
       .slice(-30)
       .map(([dia, qtd]) => ({ dia: fmtData(dia).slice(0, 5), qtd }));
 
-    return { total, ranking, evolucao, dias: porDia.size };
-  }, [data]);
+    return { total, ranking, evolucao, dias: porDia.size, periodos, seriePeriodo };
+  }, [data, modo, periodo]);
 
   return (
     <AppShell
