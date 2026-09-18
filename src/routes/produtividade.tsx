@@ -180,6 +180,43 @@ function Produtividade() {
         <p className="text-sm text-muted-foreground">Carregando...</p>
       ) : (
         <>
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4">
+            <span className="text-sm font-medium">Agrupar por</span>
+            <div className="flex gap-1">
+              {(["mes", "semana"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setModo(m);
+                    setPeriodo("todos");
+                  }}
+                  className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+                    modo === m
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {m === "mes" ? "Mês" : "Semana"}
+                </button>
+              ))}
+            </div>
+            <label className="ml-auto flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Período</span>
+              <select
+                value={periodo}
+                onChange={(e) => setPeriodo(e.target.value)}
+                className="rounded-md border bg-background px-2 py-1.5 text-sm"
+              >
+                <option value="todos">Todos</option>
+                {calc.periodos.map((p) => (
+                  <option key={p} value={p}>
+                    {modo === "mes" ? rotuloMes(p) : rotuloSemana(p)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi rotulo="Checklists realizados" valor={calc.total.toLocaleString("pt-BR")} />
             <Kpi rotulo="Conferentes ativos" valor={calc.ranking.length} tom="primary" />
