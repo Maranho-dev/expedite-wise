@@ -229,6 +229,23 @@ function Produtividade() {
           </div>
 
           <div className="mt-6 rounded-lg border bg-card p-5">
+            <h2 className="font-semibold">
+              Total geral por {modo === "mes" ? "mês" : "semana"}
+            </h2>
+            <div className="mt-4 h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={calc.seriePeriodo}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="rotulo" fontSize={11} stroke="var(--muted-foreground)" />
+                  <YAxis fontSize={11} stroke="var(--muted-foreground)" allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="qtd" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-lg border bg-card p-5">
             <h2 className="font-semibold">Evolução diária (últimos 30 dias com movimento)</h2>
             <div className="mt-4 h-64">
               <ResponsiveContainer width="100%" height="100%">
