@@ -10,7 +10,9 @@ import {
 
 export const numeroDe = (chave: string) => chave.split(":")[1] ?? chave;
 
-export type ResultadoProcessamento = {
+const dia = (v: string | null | undefined) => (v ? v.slice(0, 10) : null);
+
+export type ResumoDia = {
   data_ref: string;
   esperados: number;
   realizados: number;
@@ -24,12 +26,19 @@ export type ResultadoProcessamento = {
   canhotos_pendentes: number;
 };
 
+export type ResultadoProcessamento = ResumoDia & { dias: number };
+
+async function emLotes<T>(itens: T[], tamanho: number, fn: (lote: T[]) => Promise<void>) {
+  for (let i = 0; i < itens.length; i += tamanho) {
+    await fn(itens.slice(i, i + tamanho));
+  }
+}
+
 /** Cruza as NFs com carga contra a base de comprovantes de entrega. */
 export async function processarComprovantes(
-  dataRef: string,
   notas: NotaComCarga[],
   baixas: BaixaComprovante[],
-): Promise<{ esperados: number; ok: number; pendentes: number }> {
+): Promise<void> {
   const { data: existentes, error: errEx } = await supabase
     .from("comprovantes_nf")
     .select("nf, status")
@@ -50,7 +59,8 @@ export async function processarComprovantes(
       cliente_destino: null as string | null,
       finalizacao: null as string | null,
       status: "PENDENTE",
-      primeira_deteccao: dataRef,
+      // a detecção passa a ser a própria data de emissão da NF
+      primeira_deteccao: n.data_nf,
       resolvido_em: null as string | null,
     }));
 
@@ -82,26 +92,12 @@ export async function processarComprovantes(
           finalizacao: b.finalizacao,
           unidade: b.unidade,
           cliente_destino: b.cliente_destino,
-          resolvido_em: dataRef,
+          resolvido_em: dia(b.finalizacao) ?? isoDia(new Date()),
         })
         .eq("nf", b.nf);
       if (error) throw error;
     }
   });
-
-  const { count: pendentes } = await supabase
-    .from("comprovantes_nf")
-    .select("nf", { count: "exact", head: true })
-    .eq("status", "PENDENTE");
-  const { count: total } = await supabase
-    .from("comprovantes_nf")
-    .select("nf", { count: "exact", head: true });
-
-  return {
-    esperados: total ?? 0,
-    ok: (total ?? 0) - (pendentes ?? 0),
-    pendentes: pendentes ?? 0,
-  };
 }
 
 type LinhaEsperado = {
@@ -121,22 +117,16 @@ type LinhaEsperado = {
   resolvido_em: string | null;
 };
 
-async function emLotes<T>(itens: T[], tamanho: number, fn: (lote: T[]) => Promise<void>) {
-  for (let i = 0; i < itens.length; i += tamanho) {
-    await fn(itens.slice(i, i + tamanho));
-  }
-}
-
 export async function processarBases(
-  dataRef: string,
   esperados: Esperado[],
   realizados: Realizado[],
   notasComCarga: NotaComCarga[] = [],
   baixas: BaixaComprovante[] = [],
 ): Promise<ResultadoProcessamento> {
+  const hoje = isoDia(new Date());
   const validos = realizados.filter(finalizado);
 
-  // 1. Grava o histórico de checklists realizados (sem duplicar)
+  // 1. Histórico de checklists realizados
   await emLotes(validos, 500, async (lote) => {
     const { error } = await supabase
       .from("checklists_realizados")
@@ -144,17 +134,17 @@ export async function processarBases(
     if (error) throw error;
   });
 
-  // 2. Estado anterior dos esperados
+  // 2. Estado anterior
   const { data: anteriores, error: errAnt } = await supabase
     .from("checklists_esperados")
-    .select("*");
+    .select("chave");
   if (errAnt) throw errAnt;
-  const mapaAnterior = new Map((anteriores ?? []).map((e) => [e.chave, e]));
+  const jaExiste = new Set((anteriores ?? []).map((e) => e.chave));
 
-  // 3. Insere os novos esperados detectados
+  // 3. Novos esperados — o dia vem da data de emissão da NF
   const novosRegistros: LinhaEsperado[] = [];
   for (const e of esperados) {
-    if (mapaAnterior.has(e.chave)) continue;
+    if (jaExiste.has(e.chave)) continue;
     novosRegistros.push({
       chave: e.chave,
       tipo: e.tipo,
@@ -168,7 +158,7 @@ export async function processarBases(
       finalizado_em: null,
       conferente: null,
       checklist_id: null,
-      primeira_deteccao: dataRef,
+      primeira_deteccao: e.data_nf ?? hoje,
       resolvido_em: null,
     });
   }
@@ -181,7 +171,7 @@ export async function processarBases(
     });
   }
 
-  // 4. Carrega todos os realizados gravados e cruza pela chave numérica
+  // 4. Cruzamento pela chave numérica
   const { data: todosRealizados, error: errReal } = await supabase
     .from("checklists_realizados")
     .select("checklist_id, chave, conferente, finalizado_em")
@@ -189,7 +179,10 @@ export async function processarBases(
     .limit(50000);
   if (errReal) throw errReal;
 
-  const porNumero = new Map<string, { checklist_id: string; conferente: string | null; finalizado_em: string | null }>();
+  const porNumero = new Map<
+    string,
+    { checklist_id: string; conferente: string | null; finalizado_em: string | null }
+  >();
   for (const r of todosRealizados ?? []) {
     if (!r.chave) continue;
     const atual = porNumero.get(r.chave);
@@ -200,95 +193,127 @@ export async function processarBases(
 
   const { data: atuais, error: errAtual } = await supabase
     .from("checklists_esperados")
-    .select("*");
+    .select("chave, data_nf, status");
   if (errAtual) throw errAtual;
 
-  let novasPendencias = 0;
-  let pendenciasAntigas = 0;
-  let pendenciasResolvidas = 0;
-  const atualizacoes: { chave: string; status: string; finalizado_em: string | null; conferente: string | null; checklist_id: string | null; resolvido_em: string | null }[] = [];
+  const atualizacoes = (atuais ?? [])
+    .filter((e) => e.status === "PENDENTE" && porNumero.has(numeroDe(e.chave)))
+    .map((e) => {
+      const m = porNumero.get(numeroDe(e.chave))!;
+      return { chave: e.chave, ...m };
+    });
 
-  for (const e of atuais ?? []) {
-    const match = porNumero.get(numeroDe(e.chave));
-    const eraPendente = e.status === "PENDENTE";
-    const ehNovo = !mapaAnterior.has(e.chave);
-
-    if (match) {
-      if (eraPendente) {
-        atualizacoes.push({
-          chave: e.chave,
+  await emLotes(atualizacoes, 300, async (lote) => {
+    for (const u of lote) {
+      const { error } = await supabase
+        .from("checklists_esperados")
+        .update({
           status: "REALIZADO",
-          finalizado_em: match.finalizado_em,
-          conferente: match.conferente,
-          checklist_id: match.checklist_id,
-          resolvido_em: dataRef,
-        });
-        if (!ehNovo) pendenciasResolvidas += 1;
-      }
-    } else if (eraPendente) {
-      if (ehNovo) novasPendencias += 1;
-      else pendenciasAntigas += 1;
+          finalizado_em: u.finalizado_em,
+          conferente: u.conferente,
+          checklist_id: u.checklist_id,
+          resolvido_em: dia(u.finalizado_em) ?? hoje,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("chave", u.chave);
+      if (error) throw error;
     }
+  });
+
+  // 5. Comprovantes
+  await processarComprovantes(notasComCarga, baixas);
+
+  // 6. Recalcula o histórico diário a partir da data de emissão das NFs
+  const dias = await recalcularHistorico();
+  const ultimo = dias[dias.length - 1];
+  if (!ultimo) throw new Error("Nenhuma data de emissão encontrada na base de notas fiscais");
+  return { ...ultimo, dias: dias.length };
+}
+
+/** Reconstrói resumo_diario agrupando tudo pela data de emissão da NF. */
+export async function recalcularHistorico(): Promise<ResumoDia[]> {
+  const [{ data: esp, error: e1 }, { data: cps, error: e2 }, { data: reals, error: e3 }] =
+    await Promise.all([
+      supabase
+        .from("checklists_esperados")
+        .select("chave, data_nf, status, resolvido_em")
+        .limit(100000),
+      supabase.from("comprovantes_nf").select("nf, data_nf, status, resolvido_em").limit(100000),
+      supabase
+        .from("checklists_realizados")
+        .select("checklist_id, conferente, finalizado_em")
+        .limit(100000),
+    ]);
+  if (e1) throw e1;
+  if (e2) throw e2;
+  if (e3) throw e3;
+
+  const datas = new Set<string>();
+  for (const e of esp ?? []) if (e.data_nf) datas.add(e.data_nf);
+  for (const c of cps ?? []) if (c.data_nf) datas.add(c.data_nf);
+  const ordenadas = [...datas].sort();
+
+  // produtividade por dia de finalização
+  const prodPorDia = new Map<string, Map<string, number>>();
+  for (const r of reals ?? []) {
+    const d = dia(r.finalizado_em);
+    if (!d || !r.conferente) continue;
+    const m = prodPorDia.get(d) ?? new Map<string, number>();
+    m.set(r.conferente, (m.get(r.conferente) ?? 0) + 1);
+    prodPorDia.set(d, m);
   }
 
-  if (atualizacoes.length) {
-    await emLotes(atualizacoes, 300, async (lote) => {
-      for (const u of lote) {
-        const { error } = await supabase
-          .from("checklists_esperados")
-          .update({
-            status: u.status,
-            finalizado_em: u.finalizado_em,
-            conferente: u.conferente,
-            checklist_id: u.checklist_id,
-            resolvido_em: u.resolvido_em,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("chave", u.chave);
-        if (error) throw error;
-      }
+  let saldo = 0;
+  const linhas: ResumoDia[] = [];
+
+  for (const d of ordenadas) {
+    const espDia = (esp ?? []).filter((e) => e.data_nf === d);
+    const pendentesDia = espDia.filter((e) => e.status === "PENDENTE").length;
+    const realizadosDia = espDia.length - pendentesDia;
+    // pendências de dias anteriores que continuam abertas
+    const antigas = (esp ?? []).filter(
+      (e) => e.data_nf && e.data_nf < d && e.status === "PENDENTE",
+    ).length;
+    // resolvidas neste dia (independente da data de emissão)
+    const resolvidas = (esp ?? []).filter(
+      (e) => e.status === "REALIZADO" && dia(e.resolvido_em) === d,
+    ).length;
+
+    saldo = (esp ?? []).filter(
+      (e) => e.data_nf && e.data_nf <= d && e.status === "PENDENTE",
+    ).length;
+
+    const cpDia = (cps ?? []).filter((c) => c.data_nf === d);
+    const cpPend = cpDia.filter((c) => c.status === "PENDENTE").length;
+
+    const prod = [...(prodPorDia.get(d) ?? new Map<string, number>()).entries()]
+      .map(([conferente, qtd]) => ({ conferente, qtd }))
+      .sort((a, b) => b.qtd - a.qtd);
+
+    linhas.push({
+      data_ref: d,
+      esperados: espDia.length,
+      realizados: realizadosDia,
+      novas_pendencias: pendentesDia,
+      pendencias_antigas: antigas,
+      pendencias_resolvidas: resolvidas,
+      saldo_acumulado: saldo,
+      produtividade: prod,
+      canhotos_esperados: cpDia.length,
+      canhotos_ok: cpDia.length - cpPend,
+      canhotos_pendentes: cpPend,
     });
   }
 
-  // 5. Indicadores do dia
-  const { count: saldo } = await supabase
-    .from("checklists_esperados")
-    .select("chave", { count: "exact", head: true })
-    .eq("status", "PENDENTE");
+  await emLotes(linhas, 200, async (lote) => {
+    const { error } = await supabase
+      .from("resumo_diario")
+      .upsert(
+        lote.map((l) => ({ ...l, processado_em: new Date().toISOString() })),
+        { onConflict: "data_ref" },
+      );
+    if (error) throw error;
+  });
 
-  const esperadosDoDia = esperados.length;
-  const realizadosDoDia = esperados.filter((e) => porNumero.has(numeroDe(e.chave))).length;
-
-  const prodMap = new Map<string, number>();
-  for (const r of validos) {
-    if (!r.finalizado_em || !r.conferente) continue;
-    if (isoDia(new Date(r.finalizado_em)) !== dataRef) continue;
-    prodMap.set(r.conferente, (prodMap.get(r.conferente) ?? 0) + 1);
-  }
-  const produtividade = [...prodMap.entries()]
-    .map(([conferente, qtd]) => ({ conferente, qtd }))
-    .sort((a, b) => b.qtd - a.qtd);
-
-  const canhotos = await processarComprovantes(dataRef, notasComCarga, baixas);
-
-  const resumo: ResultadoProcessamento = {
-    canhotos_esperados: canhotos.esperados,
-    canhotos_ok: canhotos.ok,
-    canhotos_pendentes: canhotos.pendentes,
-    data_ref: dataRef,
-    esperados: esperadosDoDia,
-    realizados: realizadosDoDia,
-    novas_pendencias: novasPendencias,
-    pendencias_antigas: pendenciasAntigas,
-    pendencias_resolvidas: pendenciasResolvidas,
-    saldo_acumulado: saldo ?? 0,
-    produtividade,
-  };
-
-  const { error: errResumo } = await supabase
-    .from("resumo_diario")
-    .upsert({ ...resumo, processado_em: new Date().toISOString() }, { onConflict: "data_ref" });
-  if (errResumo) throw errResumo;
-
-  return resumo;
+  return linhas;
 }
