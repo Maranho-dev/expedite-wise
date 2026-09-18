@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -49,7 +49,37 @@ type Reg = {
   status: string | null;
 };
 
+const MESES = [
+  "jan", "fev", "mar", "abr", "mai", "jun",
+  "jul", "ago", "set", "out", "nov", "dez",
+];
+
+function chaveMes(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function rotuloMes(chave: string) {
+  const [a, m] = chave.split("-");
+  return `${MESES[Number(m) - 1]}/${a}`;
+}
+
+function chaveSemana(d: Date) {
+  const base = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  base.setDate(base.getDate() - ((base.getDay() + 6) % 7));
+  return isoDia(base);
+}
+
+function rotuloSemana(chave: string) {
+  const ini = new Date(`${chave}T00:00:00`);
+  const fim = new Date(ini);
+  fim.setDate(fim.getDate() + 6);
+  return `${fmtData(isoDia(ini)).slice(0, 5)} a ${fmtData(isoDia(fim)).slice(0, 5)}`;
+}
+
 function Produtividade() {
+  const [modo, setModo] = useState<"mes" | "semana">("mes");
+  const [periodo, setPeriodo] = useState<string>("todos");
+
   const { data, isLoading } = useQuery({
     queryKey: ["produtividade"],
     queryFn: async () => {
