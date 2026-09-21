@@ -146,7 +146,8 @@ function Painel() {
     >
       {filtro}
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <h2 className="mt-6 font-semibold">Checklists</h2>
+      <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi rotulo="Checklists esperados" valor={u.esperados} detalhe="No dia de referência" />
         <Kpi
           rotulo="Realizados"
@@ -174,14 +175,21 @@ function Painel() {
         <Kpi rotulo="Pendências resolvidas" valor={u.pendencias_resolvidas} tom="success" />
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Kpi rotulo="Notas com carga" valor={u.canhotos_esperados ?? 0} detalhe="Exigem canhoto" />
-        <Kpi rotulo="Comprovantes OK" valor={u.canhotos_ok ?? 0} tom="success" />
+      <h2 className="mt-6 font-semibold">Canhotos de entrega</h2>
+      <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Kpi rotulo="Canhotos do dia" valor={u.canhotos_esperados ?? 0} detalhe="Notas com carga no dia" />
+        <Kpi rotulo="OK no dia" valor={u.canhotos_ok ?? 0} tom="success" detalhe="Comprovante recebido" />
         <Kpi
-          rotulo="Canhotos pendentes"
+          rotulo="Pendentes do dia"
           valor={u.canhotos_pendentes ?? 0}
+          tom="warning"
+          detalhe="Sem comprovante ainda"
+        />
+        <Kpi
+          rotulo="Saldo acumulado"
+          valor={u.canhotos_saldo_acumulado ?? 0}
           tom="destructive"
-          detalhe="Saldo acumulado de canhotos"
+          detalhe="Canhotos pendentes no total"
         />
       </div>
 
