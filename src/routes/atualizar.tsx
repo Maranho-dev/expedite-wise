@@ -12,7 +12,6 @@ import {
   detectarCK,
   detectarCP,
   detectarNF,
-  isoDia,
   montarBaixas,
   montarEsperados,
   montarNotasComCarga,
@@ -147,7 +146,6 @@ function Atualizar() {
   const [nfRows, setNfRows] = useState<Row[]>([]);
   const [ckRows, setCkRows] = useState<Row[]>([]);
   const [cpRows, setCpRows] = useState<Row[]>([]);
-  const [dataRef, setDataRef] = useState(isoDia(new Date()));
   const [processando, setProcessando] = useState(false);
   const [resultado, setResultado] = useState<ResultadoProcessamento | null>(null);
 
@@ -166,7 +164,7 @@ function Atualizar() {
       const realizados = montarRealizados(ckRows, mapaCK!);
       const notas = montarNotasComCarga(nfRows, mapaNF!);
       const baixas = mapaCP ? montarBaixas(cpRows, mapaCP) : [];
-      const res = await processarBases(dataRef, esperados, realizados, notas, baixas);
+      const res = await processarBases(esperados, realizados, notas, baixas);
       setResultado(res);
       toast.success("Bases processadas com sucesso");
     } catch (e) {
@@ -212,21 +210,12 @@ function Atualizar() {
       )}
 
       <div className="mt-5 flex flex-wrap items-end gap-4 rounded-lg border bg-card p-5">
-        <div className="space-y-1.5">
-          <Label htmlFor="dataRef">Data de referência</Label>
-          <Input
-            id="dataRef"
-            type="date"
-            value={dataRef}
-            onChange={(e) => setDataRef(e.target.value)}
-            className="w-44"
-          />
-        </div>
         <Button onClick={processar} disabled={processando} size="lg">
           {processando ? "Processando..." : "Processar bases"}
         </Button>
         <p className="text-sm text-muted-foreground">
-          Reprocessar a mesma data atualiza o registro daquele dia sem apagar o histórico.
+          Cada NF é agrupada pela sua própria data de emissão. Reprocessar atualiza o histórico de
+          todos os dias sem apagar registros existentes.
         </p>
       </div>
 
