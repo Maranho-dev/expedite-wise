@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
+importar {
   detectarCK,
   detectarCP,
   detectarNF,
@@ -16,115 +16,115 @@ import {
   montarEsperados,
   montarNotasComCarga,
   montarRealizados,
-  type Row,
-} from "@/lib/checklist-core";
-import { processarBases, type ResultadoProcessamento } from "@/lib/processar";
+  tipo Linha,
+} de "@/lib/checklist-core";
+import { processarBases, digite ResultadoProcessamento } from "@/lib/processar";
 
 export const Route = createFileRoute("/atualizar")({
-  ssr: false,
-  head: () => ({
+  ssr: falso,
+  cabeça: () => ({
     meta: [
       { title: "Atualizar bases — Checklists de Expedição" },
       {
-        name: "description",
-        content:
+        nome: "descrição",
+        contente:
           "Envie as planilhas de notas fiscais e de checklists para cruzar os dados e atualizar os indicadores do dia.",
       },
       { property: "og:title", content: "Atualizar bases — Checklists de Expedição" },
       {
-        property: "og:description",
+        propriedade: "og:descrição",
         content: "Upload diário das bases de notas fiscais e checklists realizados.",
       },
     ],
   }),
-  component: Atualizar,
+  componente: Atualizar,
 });
 
-function lerArquivo(file: File): Promise<Row[]> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Não foi possível ler o arquivo"));
-    reader.onload = () => {
-      try {
+função lerArquivo(arquivo: Arquivo): Promise<Linha[]> {
+  retornar nova Promise((resolver, rejeitar) => {
+    const leitor = novo FileReader();
+    reader.onerror = () => rejeitar(new Error("Não foi possível ler o arquivo"));
+    leitor.onload = () => {
+      tentar {
         const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
         const ws = wb.Sheets[wb.SheetNames[0]!]!;
         resolve(XLSX.utils.sheet_to_json<Row>(ws, { defval: null }));
       } catch (e) {
-        reject(e as Error);
+        rejeitar(e como Erro);
       }
     };
-    reader.readAsArrayBuffer(file);
+    leitor.lerComoArrayBuffer(arquivo);
   });
 }
 
-function lerColado(texto: string): Row[] {
+function lerColado(texto: string): Linha[] {
   const linhas = texto.trim().split(/\r?\n/).filter(Boolean);
-  if (linhas.length < 2) return [];
+  se (linhas.length < 2) retorne [];
   const sep = linhas[0]!.includes("\t") ? "\t" : linhas[0]!.includes(";") ? ";" : ",";
   const heads = linhas[0]!.split(sep).map((h) => h.trim());
   return linhas.slice(1).map((l) => {
     const cols = l.split(sep);
-    const obj: Row = {};
+    const obj: Linha = {};
     heads.forEach((h, i) => (obj[h] = (cols[i] ?? "").trim()));
-    return obj;
+    retornar obj;
   });
 }
 
-function BaseInput({
-  titulo,
-  descricao,
-  rows,
+função BaseInput({
+  título,
+  descrição,
+  fileiras,
   onRows,
 }: {
-  titulo: string;
-  descricao: string;
-  rows: Row[];
+  título: string;
+  descrição: string;
+  linhas: Linha[];
   onRows: (r: Row[]) => void;
 }) {
   const [texto, setTexto] = useState("");
-  return (
+  retornar (
     <div className="rounded-lg border bg-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold">{titulo}</h2>
+          <h2 className="font-semibold">{tituloCEh2>
           <p className="mt-0.5 text-sm text-muted-foreground">{descricao}</p>
         </div>
         {rows.length > 0 ? (
           <Badge variant="secondary" className="shrink-0">
             {rows.length.toLocaleString("pt-BR")} linhas
           </Badge>
-        ) : null}
+        ) : nulo}
       </div>
 
       <div className="mt-4 space-y-3">
         <div className="space-y-1.5">
           <Label>Arquivo Excel</Label>
-          <Input
-            type="file"
-            accept=".xlsx,.xls,.csv"
+          <Entrada>
+            tipo="arquivo"
+            aceitar=".xlsx,.xls,.csv"
             onChange={async (e) => {
               const f = e.target.files?.[0];
-              if (!f) return;
-              try {
+              se (!f) retornar;
+              tentar {
                 const r = await lerArquivo(f);
                 onRows(r);
-                toast.success(`${titulo}: ${r.length} linhas carregadas`);
-              } catch {
-                toast.error("Não foi possível ler esse arquivo");
+                brinde.success(`${titulo}: ${r.length} linhas relacionadas`);
+              } pegar {
+                brinde.error("Não foi possível ler esse arquivo");
               }
             }}
           />
         </div>
         <div className="space-y-1.5">
           <Label>Ou cole os dados (com a linha de cabeçalho)</Label>
-          <Textarea
-            rows={4}
-            value={texto}
+          <Área de texto>
+            linhas={4}
+            valor={texto}
             placeholder="Cole aqui as linhas copiadas do Excel"
             onChange={(e) => {
               setTexto(e.target.value);
               const r = lerColado(e.target.value);
-              if (r.length) onRows(r);
+              se (r.comprimento) emLinhas(r);
             }}
           />
         </div>
@@ -136,67 +136,67 @@ function BaseInput({
               </span>
             ))}
           </div>
-        ) : null}
+        ) : nulo}
       </div>
     </div>
   );
 }
 
-function Atualizar() {
+função Atualizar() {
   const [nfRows, setNfRows] = useState<Row[]>([]);
   const [ckRows, setCkRows] = useState<Row[]>([]);
   const [cpRows, setCpRows] = useState<Row[]>([]);
   const [processando, setProcessando] = useState(false);
-  const [resultado, setResultado] = useState<ResultadoProcessamento | null>(null);
+  const [resultado, setResultado] = useState<ResultadoProcessamento | nulo>(nulo);
 
   const mapaNF = nfRows.length ? detectarNF(Object.keys(nfRows[0]!)) : null;
   const mapaCK = ckRows.length ? detectarCK(Object.keys(ckRows[0]!)) : null;
   const mapaCP = cpRows.length ? detectarCP(Object.keys(cpRows[0]!)) : null;
 
-  async function processar() {
-    if (!nfRows.length || !ckRows.length) {
-      toast.error("Carregue as duas bases antes de processar");
-      return;
+  função assíncrona() {
+    se (!nfRows.length || !ckRows.length) {
+      brinde.error("Carregue as duas bases antes de processar");
+      retornar;
     }
     setProcessando(true);
-    try {
+    tentar {
       const esperados = montarEsperados(nfRows, mapaNF!);
       const realizados = montarRealizados(ckRows, mapaCK!);
       const notas = montarNotasComCarga(nfRows, mapaNF!);
       const baixas = mapaCP ? montarBaixas(cpRows, mapaCP) : [];
-      const res = await processarBases(esperados, realizados, notas, baixas);
+      const res = aguarda processarBases(esperados, realizados, notas, baixas);
       setResultado(res);
-      toast.success("Bases processadas com sucesso");
+      brinde.success("Bases processadas com sucesso");
     } catch (e) {
       console.error(e);
-      toast.error("Falha ao processar as bases");
-    } finally {
+      brinde.error("Falha ao processar as bases");
+    } finalmente {
       setProcessando(false);
     }
   }
 
-  return (
+  retornar (
     <AppShell
-      titulo="Atualizar bases"
+      título="Atualizar bases"
       descricao="Envie as bases do dia. O sistema identifica as colunas, monta a chave de cada checklist, cruza as informações, confere os comprovantes de entrega e registra o resultado no histórico."
     >
       <div className="grid gap-5 lg:grid-cols-2">
         <BaseInput
           titulo="Base 1 — Notas Fiscais"
           descricao="Relação de notas emitidas, com número do documento e carga."
-          rows={nfRows}
+          linhas={nfLinhas}
           onRows={setNfRows}
         />
         <BaseInput
-          titulo="Base 2 — Checklists"
+          título="Base 2 — Listas de verificação"
           descricao="Histórico de checklists com objeto, executor e finalização."
-          rows={ckRows}
+          linhas={ckRows}
           onRows={setCkRows}
         />
         <BaseInput
           titulo="Base 3 — Comprovantes de entrega"
           descricao="Notas com comprovante baixado pelo motorista (documento e finalização)."
-          rows={cpRows}
+          linhas={cpRows}
           onRows={setCpRows}
         />
       </div>
@@ -210,11 +210,11 @@ function Atualizar() {
       )}
 
       <div className="mt-5 flex flex-wrap items-end gap-4 rounded-lg border bg-card p-5">
-        <Button onClick={processar} disabled={processando} size="lg">
-          {processando ? "Processando..." : "Processar bases"}
-        </Button>
+        <Button onClick={processar} desativado={processando} size="lg">
+          {processando ? "Processando..." : "Processando bases"}
+        </Botão>
         <p className="text-sm text-muted-foreground">
-          Cada NF é agrupada pela sua própria data de emissão. Reprocessar atualiza o histórico de
+          Cada NF é agrupada pelos seus próprios dados de emissão. Reprocessar atualização do histórico de
           todos os dias sem apagar registros existentes.
         </p>
       </div>
@@ -232,11 +232,12 @@ function Atualizar() {
               ["Saldo acumulado", resultado.saldo_acumulado],
               ["NFs com carga", resultado.canhotos_esperados],
               ["Canhotos OK", resultado.canhotos_ok],
-              ["Canhotos pendentes", resultado.canhotos_pendentes],
+              ["Canhotos pendentes (dia)", resultado.canhotos_pendentes],
+              ["Canhotos pendentes (acumulados)", resultado.canhotos_saldo_acumulado],
             ].map(([k, v]) => (
               <div key={k as string} className="rounded-md bg-muted/60 p-3">
                 <p className="text-xs text-muted-foreground">{k}</p>
-                <p className="text-xl font-semibold">{v}</p>
+                <p className="text-xl font-semibold">{v°p>
               </div>
             ))}
           </div>
@@ -246,15 +247,15 @@ function Atualizar() {
   );
 }
 
-function MapaCard({ titulo, mapa }: { titulo: string; mapa: Record<string, string | null> }) {
-  return (
+function MapaCard({ título, mapa }: { título: string; mapa: Record<string, string | null> }) {
+  retornar (
     <div className="rounded-lg border bg-card p-5">
       <h3 className="text-sm font-semibold">{titulo}</h3>
       <dl className="mt-3 grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-2">
         {Object.entries(mapa).map(([k, v]) => (
           <div key={k} className="flex justify-between gap-2 border-b border-dashed py-1">
-            <dt className="capitalize text-muted-foreground">{k}</dt>
-            <dd className={v ? "font-medium" : "text-muted-foreground"}>{v ?? "não encontrada"}</dd>
+            <dt className="capitalize text-muted-foreground">{kinstadt>
+            <dd className={v ? "font-medium" : "text-muted-foreground"}>{v ?? "não encontrado"}</dd>
           </div>
         ))}
       </dl>
