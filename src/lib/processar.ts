@@ -24,6 +24,7 @@ export type ResumoDia = {
   canhotos_esperados: number;
   canhotos_ok: number;
   canhotos_pendentes: number;
+  canhotos_saldo_acumulado: number;
 };
 
 export type ResultadoProcessamento = ResumoDia & { dias: number };
@@ -285,6 +286,10 @@ export async function recalcularHistorico(): Promise<ResumoDia[]> {
 
     const cpDia = (cps ?? []).filter((c) => c.data_nf === d);
     const cpPend = cpDia.filter((c) => c.status === "PENDENTE").length;
+    // saldo acumulado de canhotos: todos os pendentes até essa data, não só os do dia
+    const saldoCanhotos = (cps ?? []).filter(
+      (c) => c.data_nf && c.data_nf <= d && c.status === "PENDENTE",
+    ).length;
 
     const prod = [...(prodPorDia.get(d) ?? new Map<string, number>()).entries()]
       .map(([conferente, qtd]) => ({ conferente, qtd }))
@@ -302,6 +307,7 @@ export async function recalcularHistorico(): Promise<ResumoDia[]> {
       canhotos_esperados: cpDia.length,
       canhotos_ok: cpDia.length - cpPend,
       canhotos_pendentes: cpPend,
+      canhotos_saldo_acumulado: saldoCanhotos,
     });
   }
 
