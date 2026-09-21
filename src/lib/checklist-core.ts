@@ -201,8 +201,12 @@ export function montarRealizados(rows: Row[], mapa: MapaCK): Realizado[] {
   return [...out.values()];
 }
 
-export const finalizado = (r: Realizado) =>
-  !!r.finalizado_em && /finaliz|conclu/i.test(r.status ?? "Execução finalizada");
+// Um checklist conta como realizado quando conseguimos identificar o número
+// de referência (carga ou NF) e existe alguma data de processamento — não
+// exigimos mais que o texto da coluna "status" contenha literalmente
+// "finalizado" ou "concluído", porque a planilha real usa outras palavras
+// (ex.: "Realizado", "OK", "Fechado") e isso zerava os cruzamentos.
+export const finalizado = (r: Realizado) => !!r.chave && !!(r.finalizado_em || r.criado_em);
 
 /* ---------------- Comprovantes de entrega (canhotos) ---------------- */
 
